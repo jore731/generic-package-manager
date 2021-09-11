@@ -2,7 +2,7 @@ import logging
 import unittest
 
 from package import Package, PackageInstallationError, DependencyInstallationError, PackageRemovalError, \
-    DependenceLoopError
+    DependenceLoopError, DependentPackageFoundError
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(name)s [%(levelname)s]: %(message)s")
 
@@ -88,15 +88,34 @@ class PackageInstallingTest(unittest.TestCase):
         self.dependency1.install_process = raise_exception
         self.assertRaises(DependencyInstallationError, self.main_package.install)
 
+    def test_install_sub_dependency(self):
+        self.test_register_dependency()
+        sub_dependency1 = Package('sub_dependency1')
+        self.dependency1.depends_on(sub_dependency1)
+        self.main_package.install(explicitly_installed=True)
+        self.assertTrue(sub_dependency1.installed)
+
+    def test_verify_postinstalation_explicity_flag(self):
+        self.test_register_dependency()
+        self.main_package.install(explicitly_installed=True)
+        self.assertTrue(self.dependency1.installed)
+        self.assertFalse(self.dependency1.explicitly_installed)
+        self.dependency1.install(explicitly_installed=True)
+        self.assertTrue(self.dependency1.explicitly_installed)
 
 class PackageRemovingTest(unittest.TestCase):
     def setUp(self):
         self.main_package = Package('main_package')
         self.dependency1 = Package('dependency1')
         self.dependency2 = Package('dependency2')
+        self.sub_dependency1 = Package('sub_dependency1')
+        self.second_main_package = Package('second_main_package')
         self.main_package.depends_on(self.dependency1)
+        self.second_main_package.depends_on(self.dependency1)
         self.main_package.depends_on(self.dependency2)
+        self.dependency2.depends_on(self.sub_dependency1)
         self.main_package.install(explicitly_installed=True)
+        self.second_main_package.install(explicitly_installed=True)
 
     def test_remove_standalone_package(self):
         new_package = Package("nano")
@@ -107,7 +126,28 @@ class PackageRemovingTest(unittest.TestCase):
 
     def test_remove_main_package(self):
         self.main_package.remove()
-        self.assertFalse(self.dependency1.installed)
-        self.assertFalse(self.dependency2.installed)
         self.assertFalse(self.main_package.installed)
         self.assertFalse(self.main_package.explicitly_installed)
+
+    def test_remove_dependent_package(self):
+        self.assertRaises(DependentPackageFoundError, self.dependency1.remove)
+
+    def test_dependency_cleanup(self):
+        self.main_package.remove()
+        self.assertTrue(self.dependency1.installed)
+        self.assertFalse(self.dependency2.installed)
+        self.assertFalse(self.sub_dependency1.installed)
+
+    def test_sub_dependency_dependence_check(self):
+        self.sub_dependency1.required_by(self.second_main_package)
+        self.main_package.remove()
+        self.assertTrue(self.dependency1.installed)
+        self.assertFalse(self.dependency2.installed)
+        self.assertTrue(self.sub_dependency1.installed)
+
+    def test_keep_explicitly_installed(self):
+        self.dependency2.install(explicitly_installed=True)
+        self.main_package.remove()
+        self.assertTrue(self.dependency1.installed)
+        self.assertTrue(self.dependency2.installed)
+        self.assertTrue(self.sub_dependency1.installed)
