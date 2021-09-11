@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse
-from package import Package
+from package import Package, DependentPackageFoundError
 
 
 def parse_arguments():
@@ -31,7 +31,10 @@ def depend(main_package_name: str, *dependent_package_names: [str]):
 
 def remove(package_name: str):
     register_package(package_name)
-    packages[package_name].remove()
+    try:
+        packages[package_name].remove()
+    except DependentPackageFoundError as exc:
+        print(exc)
 
 
 def list_packages():

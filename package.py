@@ -164,9 +164,10 @@ class Package(object):
         """
         for dependence in self.dependencies:
             try:
-                dependence.remove()
+                if not dependence.explicitly_installed:
+                    dependence.remove(explicity_removal=False)
             except DependentPackageFoundError as exc:
-                print(exc)
+                pass
             except PackageRemovalError:
                 raise CleanupProcessError(f"There was a problem removing some dependencies: {dependence.name}")
 
