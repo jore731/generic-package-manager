@@ -11,6 +11,37 @@ def raise_exception():
     raise Exception
 
 
+class PackageDependenciesTest(unittest.TestCase):
+    def setUp(self):
+        self.package1 = Package("1")
+        self.package2 = Package("2")
+        pass
+
+    def test_register_dependency_depends_on(self):
+        self.package1.depends_on(self.package2)
+        self.assertEqual(self.package1.dependencies, [self.package2])
+        self.assertEqual(self.package2.dependent_packages, [self.package1])
+
+    def test_register_dependency_required_by(self):
+        self.package1.required_by(self.package2)
+        self.assertEqual(self.package1.dependent_packages, [self.package2])
+        self.assertEqual(self.package2.dependencies, [self.package1])
+
+    def test_already_registered_dependency(self):
+        self.package1.depends_on(self.package2)
+        self.package1.depends_on(self.package2)
+        self.assertEqual(self.package1.dependencies, [self.package2])
+        self.assertEqual(self.package2.dependent_packages, [self.package1])
+
+    def test_dependent_cannot_be_dependency(self):
+        self.package1.depends_on(self.package2)
+        self.assertRaises(DependenceLoopError, self.package2.depends_on, self.package1)
+
+    def test_dependent_cannot_be_dependency_2(self):
+        self.package1.required_by(self.package2)
+        self.assertRaises(DependenceLoopError, self.package2.required_by, self.package1)
+
+
 class PackageInstallingTest(unittest.TestCase):
     def setUp(self):
         pass
