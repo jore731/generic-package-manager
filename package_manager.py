@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 import argparse
+import sys
+
 from package import Package, DependentPackageFoundError
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(prog='package_manager.py')
     parser.add_argument('-f', type=argparse.FileType('r'), help='Input File', required=True)
-    parser.add_argument('-o', type=argparse.FileType('r'), help='Output File (If not specified, stdout will be used)')
+    parser.add_argument('-o', type=argparse.FileType('w'), help='Output File (If not specified, stdout will be used)')
 
     _args = parser.parse_args()
     return _args
@@ -61,6 +63,8 @@ def process_command(command, *args):
 
 if __name__ == '__main__':
     args = parse_arguments()
+    if args.o is not None:
+        sys.stdout = args.o
 
     packages = {}
 
