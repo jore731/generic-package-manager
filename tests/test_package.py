@@ -88,3 +88,26 @@ class PackageInstallingTest(unittest.TestCase):
         self.dependency1.install_process = raise_exception
         self.assertRaises(DependencyInstallationError, self.main_package.install)
 
+
+class PackageRemovingTest(unittest.TestCase):
+    def setUp(self):
+        self.main_package = Package('main_package')
+        self.dependency1 = Package('dependency1')
+        self.dependency2 = Package('dependency2')
+        self.main_package.depends_on(self.dependency1)
+        self.main_package.depends_on(self.dependency2)
+        self.main_package.install(explicitly_installed=True)
+
+    def test_remove_standalone_package(self):
+        new_package = Package("nano")
+        new_package.install(explicitly_installed=True)
+        new_package.remove()
+        self.assertFalse(new_package.installed)
+        self.assertFalse(new_package.explicitly_installed)
+
+    def test_remove_main_package(self):
+        self.main_package.remove()
+        self.assertFalse(self.dependency1.installed)
+        self.assertFalse(self.dependency2.installed)
+        self.assertFalse(self.main_package.installed)
+        self.assertFalse(self.main_package.explicitly_installed)
