@@ -126,11 +126,7 @@ class Package(object):
         :raise DependentPackageFoundError:  Package is still needed by another package
         """
         if self.dependent_packages is not []:
-            try:
-                self._verify_dependent_packages()
-            except DependentPackageFoundError as exc:
-                print(exc)
-                return None
+            self._verify_dependent_packages()
 
         if not explicity_removal:
             print(f"         {self.name} is no longer needed")
