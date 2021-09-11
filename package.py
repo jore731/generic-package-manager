@@ -2,6 +2,10 @@ class PackageInstallationError(Exception):
     pass
 
 
+class DependenceLoopError(Exception):
+    pass
+
+
 class DependencyInstallationError(PackageInstallationError):
     pass
 
@@ -12,7 +16,43 @@ class Package(object):
         self.installed: bool = False
         self.explicitly_installed: bool = False
         self.dependencies: list = []
-        self.required_by: list = []
+        self.dependent_packages: list = []
+
+    def depends_on(self, package):
+        """
+        Registers `package` as a dependency (and self as a dependent package of `package`)
+
+        :param package: Package to be registered as dependency
+
+        :return: None
+
+        :raise DependenceLoopError: When trying to register a dependent package as a dependency
+        """
+        if package in self.dependent_packages:
+            raise DependenceLoopError()
+
+        if package not in self.dependencies:
+            self.dependencies.append(package)
+        if self not in package.dependent_packages:
+            package.required_by(self)
+
+    def required_by(self, package):
+        """
+        Registers `package` as a dependent package (and self as a dependency of `package`)
+
+        :param package: Package to be registered as dependent package
+
+        :return: None
+
+        :raise DependenceLoopError: When trying to register a dependency as a dependent package
+        """
+        if package in self.dependencies:
+            raise DependenceLoopError()
+
+        if package not in self.dependent_packages:
+            self.dependent_packages.append(package)
+        if self not in package.dependencies:
+            package.depends_on(self)
 
     def install(self, explicitly_installed: bool = False):
         """
