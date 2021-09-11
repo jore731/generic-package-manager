@@ -10,6 +10,19 @@ class DependencyInstallationError(PackageInstallationError):
     pass
 
 
+class PackageRemovalError(Exception):
+    pass
+
+
+class CleanupProcessError(Exception):
+    pass
+
+
+class DependentPackageFoundError(Exception):
+    def __init__(self, package):
+        super().__init__(f"     {package.name} is still needed")
+
+
 class Package(object):
     def __init__(self, name: str):
         self.name: str = name
@@ -99,3 +112,59 @@ class Package(object):
         nothing else than success"""
         print(f"        {self.name} successfully installed")
 
+    def remove(self, explicity_removal: bool = True):
+        """
+
+        Verifies dependent packages and removes the package if it is safe to do it
+
+        :param explicity_removal: If False, notifies when no longer needed before removing
+
+        :raise PackageRemovalError:  Package removal process failed
+        :raise CleanupProcessError:  Dependent package removal process failed
+        :raise DependentPackageFoundError:  Package is still needed by another package
+        """
+        if self.dependent_packages is not []:
+            self._verify_dependent_packages()
+
+        if not explicity_removal:
+            print(f"        {self.name} is no longer needed")
+
+        if explicity_removal and not self.installed:
+            print(f"        {self.name} is not installed")
+        try:
+            self.remove_process()
+        except Exception:
+            raise PackageRemovalError() from Exception
+
+        self.installed = False
+        self.explicitly_installed = False
+
+        if self.dependencies is not []:
+            self._clean_dependencies()
+
+    def _verify_dependent_packages(self):
+        """
+        :raise DependentPackageFoundError: When a dependent package is still installed
+        """
+        for package in self.dependent_packages:
+            if package.installed:
+                raise DependentPackageFoundError
+
+    def _clean_dependencies(self):
+        """
+        Clean dependent packages after removing a package
+
+        :raise CleanupProcessError: If a problem happens on removing some dependency
+        """
+        for dependence in self.dependencies:
+            try:
+                dependence.remove()
+            except DependentPackageFoundError:
+                print(f"        {dependence.name} is still needed")
+            except PackageRemovalError:
+                raise CleanupProcessError(f"There was a problem removing some dependencies: {dependence.name}")
+
+    def remove_process(self):
+        """Depending on the package, the removal process might vary. For now, the package removal can be assumed as
+        nothing else than success (assuming the dependent package verification is already done"""
+        print(f"        {self.name} successfully removed")
