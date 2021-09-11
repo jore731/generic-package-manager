@@ -59,7 +59,7 @@ class Package(object):
         Verifies dependencies and installs the package
 
         :param explicitly_installed: If true, the package would be marked as explicitly installed, preventing automatic
-        uninstallations.
+        removal.
 
         :return: None
 
@@ -93,4 +93,5 @@ class Package(object):
     def install_process(self):
         """Depending on the package, the install process might vary. For now, the package installation can be assumed as
         nothing else than success"""
+        print(f"{self.name} successfully installed")
         pass
