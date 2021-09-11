@@ -66,16 +66,20 @@ class Package(object):
         :raise PackageInstallationError:  Either installation process failed or dependency installation process failed
         """
         if self.dependencies is not []:
-            self.install_dependencies()
+            self._install_dependencies()
+
+        if self.installed and explicitly_installed:
+            print(f"        {self.name} is already installed")
+            return None
         try:
             self.install_process()
         except Exception:
-            raise PackageInstallationError from Exception
+            raise PackageInstallationError() from Exception
 
         self.installed = True
         self.explicitly_installed = explicitly_installed
 
-    def install_dependencies(self):
+    def _install_dependencies(self):
         """
         If dependencies are detected, proceeds to install them
 
@@ -93,5 +97,5 @@ class Package(object):
     def install_process(self):
         """Depending on the package, the install process might vary. For now, the package installation can be assumed as
         nothing else than success"""
-        print(f"{self.name} successfully installed")
-        pass
+        print(f"        {self.name} successfully installed")
+
