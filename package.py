@@ -83,6 +83,7 @@ class Package(object):
 
         if self.installed:
             if explicitly_installed:
+                self.explicitly_installed = True
                 print(f"         {self.name} is already installed")
             return None
         try:
