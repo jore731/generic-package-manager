@@ -137,6 +137,7 @@ class Package(object):
 
         if explicity_removal and not self.installed:
             print(f"         {self.name} is not installed")
+            return None
         try:
             self.remove_process()
         except Exception:
