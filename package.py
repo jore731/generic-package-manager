@@ -154,7 +154,7 @@ class Package(object):
         """
         for package in self.dependent_packages:
             if package.installed:
-                raise DependentPackageFoundError(package)
+                raise DependentPackageFoundError(self)
 
     def _clean_dependencies(self):
         """
