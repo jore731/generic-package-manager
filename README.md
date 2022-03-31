@@ -1,5 +1,6 @@
 # Generic Package Manager
-==============================. 
+==============================
+
 -- Example project for Job Interview at Vintra--
 
 A simple package manager that handles dependencies
